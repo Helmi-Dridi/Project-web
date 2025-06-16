@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "appointmentapp-462814",
+  "private_key_id": "5b55756fb624f89c2627a4564aa77baed7e2f8e3",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDpzSlhVongdsLg\nS28i6cEx0Wv4ZSKhvdOxmNwUW3R9RjWWlNhrIpKcN3QtTbo9orHNRE3onywi9qL7\n95PD2PmSqiU8ZFjqtKxY20EikHdJ3R3QcZvrBQ6eMrDIl9V6PfhmOpCGBnACpb+V\nMcByK1tfmTizoPXqySTCMrd63kpQEssoSbd066kdos39bLN3TUYyq/JnUlVt4GNn\naE+1k31qr8oqCsQYrlvEBEs9upAyB/Xj9xOfHI6aJ6CQMthj2ib5GJajDf0a9tL8\n66caeIJhu+YdPS3eNX4aVhS4ovSDchbfmNUtx8zZ8uChYHoZktG9wV2fHTpe1uSS\noog8GbLZAgMBAAECggEAah42s/mFZx5AYXGbpesXRzdYnEu7JlJ0rV1GNu8ztlCR\nriEtAaOVi9YXoyBucd9QeGySOA1XCR+M5nR+2xu2W31inUCmoxESUNpje/66RgpY\np+2I6WlIM0Gqv8E6odtSzYOzaUGuwWTdyifkw20ucfunotBiDgjx6DsA0IHolOK0\nr2iJJtphMVHyo6xwjh12IE9qxM0q6mOu3GiGsDhhyRecntJQkuf520GV5LRRjTA+\nmK/gLpBVrj3Pb2+5nXG6JXYXm3GYLwk7qPHQHtg+INYo43kwD29Bzx/qjwSHlQb/\nXULbcrncSC0Aa4ovDJSgwEyvbgT665m+H8HHGkCmKQKBgQD601uq8EbNjxdDztMz\nCKkd9w+YE4NlEf5CGibQz2CNw5XpBVM40liMJACfhvXTwn/zZl/snEf9sEFph2Td\nGfJH6bOLYYE4ar/f46LKZ6ab6c7KKFkEsJo12BDO9nSaIvOdEz2GnYuVoGqizDN6\nAxVZMY6vj55Wj0cSBxTWZD5azwKBgQDun+WGIQXMJ4B4+Q9NJtS6fRLMnaZsYMig\ntQjf60jdXEizHR5F2L03cIwe6f2jWB/KXsJL4FCl7NADhi/cBVq7shWQrGB76K0k\nIqcXP9rtq9GxNV5FBb+fx9dW8hdM66+LgfIQbiS2TbYXGaQ5viir0L4aSTj3DJvF\nLOdCuD1h1wKBgDrQKnNnicKTZcohigYyZq0/DCoFkU62rF7FkQpvRd2X2ePcusnd\nEKQzoO3HEIdJ2QSyoZVyg7LpjDz5YV4ywku4ccAh6dHXvgv6bWZ2bWurpDBky5K8\n8jvj4PUWdvrZbTQMmeWhtWQtTDPGG9/lLzFN3H4v99mmGO0SOgGXWcOjAoGAQY3D\nrDleMluXu6QQRA2q2yCJDZUxpwxfkWaqbXlhpw43Gp2hN2b3dEeC9uspNrp64Ulu\n7xFMloicDJvMghEmf/HIYto4F1IwXoD2jjiImEpfbONQZn3Ryr9HtScEp6kHrLei\nHEll5H8syuPMbeCDo8/Qqb/72kKoeF6BmZ6rnjkCgYEAqo3D36/y1AtD5pNuvKKa\ngmKeZPnYD8f4UDe66hJmVtcAhbnL2qsnkfoNGyjVfynv2TtSKPvHrlIhAIm81Z5W\nW9dkf0zr8pvb6UIE83zeytomB/Evpp25v3iYdYzAPVIPQYragAoKsrUtWXj/e7JD\n1B+28NWxmDgHaIU8jgxGr7I=\n-----END PRIVATE KEY-----\n",
+  "client_email": "bot-calendar-meet@appointmentapp-462814.iam.gserviceaccount.com",
+  "client_id": "118247906830568381982",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/bot-calendar-meet%40appointmentapp-462814.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
