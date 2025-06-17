@@ -1,11 +1,19 @@
+/**
+ * Redesigned appointment booking UI with card-style layout and modern Tailwind styling.
+ * All booking logic remains unchanged; confirm button moved below slots for clarity.
+ */
 import { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { format } from "date-fns";
-import { useCreateAppointment, useAvailableAppointments } from "../hooks/useBooking";
+import {
+  useCreateAppointment,
+  useAvailableAppointments,
+} from "../hooks/useBooking";
 import { getCurrentUser } from "../services/authService";
 import { fetchAdmins, type AdminUser } from "../services/admin.service";
 import toast, { Toaster } from "react-hot-toast";
+import { CalendarDays, UserCircle, Clock } from "lucide-react";
 
 const ALL_TIME_SLOTS = ["10:00 AM", "11:00 AM", "1:00 PM", "2:30 PM", "4:00 PM"];
 
@@ -60,35 +68,39 @@ export default function AppointmentPage() {
   const bookedSlots = data?.bookedSlots || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 py-12 px-4">
+    <div className="min-h-screen bg-gray-100 text-gray-900 py-10 px-4">
       <Toaster />
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {/* Profile */}
-        <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col items-center text-center border border-gray-200">
+        <section className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col items-center text-center">
           <img
             src={user?.profilePicture || "https://i.pravatar.cc/100"}
             alt="User"
-            className="w-24 h-24 rounded-full border-4 border-blue-600 shadow"
+            className="w-24 h-24 rounded-full border-4 border-blue-600 shadow-md"
           />
           <h2 className="mt-4 text-xl font-semibold">{user?.name || "Student Name"}</h2>
           <p className="text-gray-500 text-sm">Student Portal</p>
 
           <div className="mt-6 w-full text-sm text-left space-y-3">
             <div className="flex items-center gap-2">
-              <span>🕒</span> <span>30-minute consultation</span>
+              <Clock className="w-4 h-4 text-blue-600" />
+              <span>30-minute consultation</span>
             </div>
             <div className="flex items-center gap-2">
-              <span>📹</span> <span>Online via Zoom</span>
+              <CalendarDays className="w-4 h-4 text-blue-600" />
+              <span>Online via Zoom</span>
             </div>
             <div className="flex items-center gap-2">
               <span>🌍</span> <span>Time zone: Eastern (US & Canada)</span>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Calendar */}
-        <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-200">
-          <h3 className="text-lg font-bold mb-4">📅 Choose a Date</h3>
+        <section className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+          <h3 className="flex items-center gap-2 text-lg font-semibold mb-4">
+            <CalendarDays className="w-5 h-5 text-blue-600" /> Choose a Date
+          </h3>
           <Calendar
             onChange={(value) => handleDateChange(value as Date)}
             value={selectedDate}
@@ -104,15 +116,17 @@ export default function AppointmentPage() {
               You selected: <strong>{format(selectedDate, "PPP")}</strong>
             </p>
           )}
-        </div>
+        </section>
 
         {/* Time & Admin */}
-        <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-200">
-          <h3 className="text-lg font-bold mb-4">🧑‍💼 Choose Admin</h3>
+        <section className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col">
+          <h3 className="flex items-center gap-2 text-lg font-semibold mb-4">
+            <UserCircle className="w-5 h-5 text-blue-600" /> Choose Admin
+          </h3>
           <select
             value={selectedAdminId || ""}
             onChange={(e) => setSelectedAdminId(e.target.value || null)}
-            className="w-full mb-6 px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-800 focus:ring-2 focus:ring-blue-500"
+            className="w-full mb-6 px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
           >
             <option value="" disabled>
               -- Select Admin --
@@ -124,7 +138,9 @@ export default function AppointmentPage() {
             ))}
           </select>
 
-          <h3 className="text-lg font-bold mb-4">⏰ Select Time Slot</h3>
+          <h3 className="flex items-center gap-2 text-lg font-semibold mb-4">
+            <Clock className="w-5 h-5 text-blue-600" /> Select Time Slot
+          </h3>
           {selectedDate ? (
             <div className="space-y-3">
               {isLoadingSlots ? (
@@ -135,31 +151,20 @@ export default function AppointmentPage() {
                   const isSelected = selectedTime === slot;
 
                   return (
-                    <div key={slot} className="flex items-center gap-3">
-                      <button
-                        onClick={() => setSelectedTime(slot)}
-                        disabled={isBooked}
-                        className={`flex-1 px-4 py-2 rounded-md text-sm font-medium shadow-sm transition ${
-                          isBooked
-                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                            : isSelected
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-100 text-gray-800 hover:bg-blue-100"
-                        }`}
-                      >
-                        {slot}
-                      </button>
-
-                      {isSelected && !isBooked && (
-                        <button
-                          onClick={confirmBooking}
-                          disabled={isPending || !selectedAdminId}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
-                        >
-                          {isPending ? "Booking..." : "Confirm"}
-                        </button>
-                      )}
-                    </div>
+                    <button
+                      key={slot}
+                      onClick={() => setSelectedTime(slot)}
+                      disabled={isBooked}
+                      className={`w-full px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
+                        isBooked
+                          ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                          : isSelected
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-gray-100 text-gray-800 hover:bg-blue-100 border-gray-300"
+                      }`}
+                    >
+                      {slot}
+                    </button>
                   );
                 })
               )}
@@ -167,11 +172,18 @@ export default function AppointmentPage() {
           ) : (
             <p className="text-sm text-gray-500 mt-2">Select a date first to see available slots.</p>
           )}
-        </div>
+          <button
+            onClick={confirmBooking}
+            disabled={isPending || !selectedAdminId || !selectedTime}
+            className="mt-6 px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 transition"
+          >
+            {isPending ? "Booking..." : "Confirm Booking"}
+          </button>
+        </section>
       </div>
 
       {/* Info Block */}
-      <div className="mt-12 max-w-3xl mx-auto text-center text-sm text-gray-500">
+      <div className="mt-12 max-w-2xl mx-auto text-center text-sm text-gray-600 bg-blue-50 border border-blue-100 p-4 rounded-md">
         📘 This page allows you to schedule a meeting with a university advisor. Select a date, pick an available time, and confirm to receive your Zoom link. If no slots are available, try another day.
       </div>
     </div>

@@ -1,9 +1,12 @@
+// Student chat page with searchable sidebar, status indicators, and enhanced message bubbles
 import { useParams, useNavigate } from "react-router-dom";
 import { useMessagesWithUser, useSendMessage } from "../hooks/useMessages";
 import { useEffect, useState, useRef } from "react";
 import { useChatSocket } from "../hooks/usechatsocket";
 import { useAdminDetails } from "../hooks/useAdmin";
 import { getCurrentUser } from "../services/authService";
+import { format } from "date-fns";
+import { Menu, Paperclip, Smile } from "lucide-react";
 
 export default function ChatPage() {
   const { userId } = useParams<{ userId: string }>();
@@ -12,10 +15,12 @@ export default function ChatPage() {
   const { data: admins = [], isLoading: loadingAdmins } = useAdminDetails();
   const [newMessage, setNewMessage] = useState("");
   const [typingUser, setTypingUser] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const { messages, loading, appendMessage } = useMessagesWithUser(userId ?? "", !!userId);
-  const { send } = useSendMessage();
+  const { send, sending } = useSendMessage();
   const currentUser = getCurrentUser();
 
   // ✅ WebSocket for receiving messages and typing
@@ -49,13 +54,19 @@ export default function ChatPage() {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!newMessage.trim() || !userId) return;
+    if (!newMessage.trim() || !userId || sending) return;
     const msg = await send(userId, newMessage);
     appendMessage(msg);
     setNewMessage("");
   };
 
   const selectedAdmin = admins.find((admin) => admin.id === userId);
+  const filteredAdmins = admins.filter((admin) =>
+    `${admin.firstName} ${admin.lastName}`
+      .toLowerCase()
+      .includes(search.toLowerCase()) ||
+    admin.email.toLowerCase().includes(search.toLowerCase())
+  );
 
   if (loadingAdmins) {
     return <div className="p-4 text-gray-500">Loading admins...</div>;
@@ -66,21 +77,40 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen relative">
       {/* Sidebar */}
-      <aside className="w-72 bg-white border-r shadow-md">
+      <aside
+        className={`bg-white border-r shadow-md md:w-72 w-full md:static absolute z-20 h-full transform transition-transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+      >
         <div className="p-5 font-bold text-xl border-b">Admins</div>
-        <div className="overflow-y-auto h-full divide-y">
-          {admins.map((admin) => (
+        <div className="p-4 border-b">
+          <input
+            type="text"
+            placeholder="Search..."
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="overflow-y-auto h-full divide-y" role="list">
+          {filteredAdmins.map((admin) => (
             <button
               key={admin.id}
+              role="listitem"
               onClick={() => navigate(`/chat/${admin.id}`)}
               className={`w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-blue-50 transition ${
                 admin.id === userId ? "bg-blue-100 font-semibold" : ""
               }`}
             >
-              <div className="h-10 w-10 rounded-full bg-blue-500 text-white flex items-center justify-center uppercase font-bold">
-                {admin.firstName[0]}
+              <div className="relative">
+                <div className="h-10 w-10 rounded-full bg-blue-500 text-white flex items-center justify-center uppercase font-bold">
+                  {admin.firstName[0]}
+                </div>
+                <span
+                  className={`absolute -bottom-0 -right-1 block w-3 h-3 rounded-full border-2 border-white ${
+                    admin.status ? "bg-green-500" : "bg-gray-400"
+                  }`}
+                />
               </div>
               <div>
                 <div className="text-sm">
@@ -96,6 +126,13 @@ export default function ChatPage() {
       {/* Chat window */}
       <main className="flex-1 flex flex-col bg-gray-50">
         <header className="p-4 border-b bg-white flex items-center gap-4 shadow-sm">
+          <button
+            className="md:hidden p-2 rounded-md hover:bg-gray-100"
+            onClick={() => setSidebarOpen((p) => !p)}
+            aria-label="Toggle sidebar"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
           <div className="h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
             {selectedAdmin.firstName[0]}
           </div>
@@ -107,25 +144,39 @@ export default function ChatPage() {
           </div>
         </header>
 
-        <section className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+        <section className="flex-1 overflow-y-auto px-6 py-4">
           {loading && <p className="text-sm text-gray-500">Loading chat...</p>}
-          {messages.map((m) => {
+          <ul role="list" className="space-y-3">
+            {messages.map((m) => {
             const isSentByMe = m.sender_id === currentUser?.ID;
             return (
-              <div
+              <li
                 key={m.id}
-                className={`max-w-lg px-4 py-2 rounded-xl shadow ${
+                role="listitem"
+                className={`max-w-lg px-4 py-2 rounded-xl shadow relative ${
                   isSentByMe
-                    ? "bg-blue-600 text-white ml-auto text-right"
-                    : "bg-white text-left"
+                    ? "bg-gradient-to-br from-blue-500 to-blue-700 text-white ml-auto"
+                    : "bg-gray-100 text-gray-800"
                 }`}
               >
-                {m.content}
-              </div>
+                <p>{m.content}</p>
+                <div
+                  className={`text-xs mt-1 ${
+                    isSentByMe ? "text-right text-blue-100" : "text-gray-500"
+                  }`}
+                >
+                  {format(new Date(m.created_at), "p")}
+                </div>
+              </li>
             );
-          })}
+            })}
+          </ul>
           {typingUser && (
-            <p className="text-sm text-gray-500 italic animate-pulse">
+            <p
+              className="text-sm text-gray-500 italic animate-pulse"
+              role="status"
+              aria-live="polite"
+            >
               {selectedAdmin.firstName} is typing...
             </p>
           )}
@@ -133,18 +184,38 @@ export default function ChatPage() {
         </section>
 
         <footer className="p-4 border-t bg-white flex items-center gap-3">
+          <button
+            type="button"
+            aria-label="Add emoji"
+            className="text-gray-500 hover:text-blue-600"
+          >
+            <Smile className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            aria-label="Attach file"
+            className="text-gray-500 hover:text-blue-600"
+          >
+            <Paperclip className="w-5 h-5" />
+          </button>
           <input
-            className="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            onKeyDown={(e) => {
+              if ((e.key === "Enter" && !e.shiftKey) || (e.key === "Enter" && (e.ctrlKey || e.metaKey))) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
             placeholder="Type your message..."
           />
           <button
             onClick={handleSend}
-            className="bg-blue-600 hover:bg-blue-700 transition text-white px-5 py-2 rounded-full"
+            disabled={sending}
+            className="bg-blue-600 hover:bg-blue-700 transition text-white px-5 py-2 rounded-full disabled:opacity-50"
           >
-            Send
+            {sending ? "Sending..." : "Send"}
           </button>
         </footer>
       </main>

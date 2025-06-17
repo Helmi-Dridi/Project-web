@@ -2,13 +2,24 @@ import { useState, useEffect } from "react";
 import {
   Calendar as BigCalendar,
   dateFnsLocalizer,
+  type View,
+  type ToolbarProps,
 } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { enUS } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
 import DailyAppointmentsModal from "../components/DailyAppointmentsModal";
 import UpdateAppointmentModal from "../components/UpdateAppointmentModal";
+
+// Summary:
+// - Fixed typing by introducing a CalendarEvent interface for the calendar.
+// - Added view and date state to enable navigation between time ranges.
+// - Implemented a custom toolbar with accessible buttons and tooltips.
+// - Calendar controls (Today, Back, Next, Month, Week, Day, Agenda) now work
+//   properly and the layout is more responsive.
 
 import {
   useUpcomingAppointments,
@@ -17,6 +28,7 @@ import {
   useSendReminder,
   useRescheduleAppointment,
 } from "../hooks/useBooking";
+import type { Appointment } from "../services/booking.service";
 
 // Localization
 const locales = { "en-US": enUS };
@@ -28,24 +40,68 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-type Appointment = {
-  id: string;
-  date: string;
-  timeSlot: string;
-  status: string;
-};
 
-type CalendarEvent = {
+
+interface CalendarEvent {
   id: string;
   title: string;
   start: Date;
   end: Date;
   resource: Appointment;
-};
+}
+
+function CalendarToolbar({ label, onNavigate, onView, view }: ToolbarProps<CalendarEvent, Appointment>) {
+  const viewNames: View[] = ["month", "week", "day", "agenda"];
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+      <div className="flex items-center gap-2">
+        <button
+          title="Today"
+          aria-label="Go to today"
+          onClick={() => onNavigate("TODAY")}
+          className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200"
+        >
+          Today
+        </button>
+        <button
+          title="Back"
+          aria-label="Previous"
+          onClick={() => onNavigate("PREV")}
+          className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <button
+          title="Next"
+          aria-label="Next"
+          onClick={() => onNavigate("NEXT")}
+          className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+        <span className="font-semibold ml-2">{label}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        {viewNames.map((name) => (
+          <button
+            key={name}
+            title={name.charAt(0).toUpperCase() + name.slice(1)}
+            onClick={() => onView(name)}
+            className={`px-2 py-1 rounded capitalize ${view === name ? "bg-blue-600 text-white" : "bg-gray-100 hover:bg-gray-200"}`}
+          >
+            {name}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminCalendarPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<Appointment | null>(null);
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [currentView, setCurrentView] = useState<View>("month");
 
   const { data: appointments = [], isLoading } = useUpcomingAppointments();
   const updateStatus = useUpdateAppointmentStatus();
@@ -109,12 +165,21 @@ export default function AdminCalendarPage() {
         </div>
       )}
 
-      <BigCalendar
+      {!isLoading && events.length === 0 && (
+        <p className="text-center text-gray-500 mb-2">No events to display.</p>
+      )}
+      <BigCalendar<CalendarEvent, Appointment>
         localizer={localizer}
         events={events}
         startAccessor={(event) => event.start}
         endAccessor={(event) => event.end}
-        style={{ height: 600 }}
+        style={{ height: "60vh" }}
+        date={currentDate}
+        onNavigate={(d) => setCurrentDate(d)}
+        view={currentView}
+        onView={(v) => setCurrentView(v)}
+        views={["month", "week", "day", "agenda"]}
+        components={{ toolbar: CalendarToolbar }}
         selectable
         onSelectSlot={(slot) => {
           const formatted = format(slot.start, "yyyy-MM-dd");
