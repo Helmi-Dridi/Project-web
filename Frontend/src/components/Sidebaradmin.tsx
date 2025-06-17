@@ -6,6 +6,7 @@ import {
   FaCalendarAlt,
   FaSignOutAlt,
   FaCog,
+  FaHome,
 } from "react-icons/fa";
 import type { FC } from "react";
 import { useAuth } from "../context/AuthContext";
@@ -25,6 +26,7 @@ const SidebarAdmin: FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
   const isActive = (path: string) => location.pathname === path;
 
   const menuItems = [
+    { icon: <FaHome/>, label: "Home", path: "/admin/home" },
     { icon: <FaUserShield />, label: "Admins", path: "/admin/list" },
     { icon: <FaUserGraduate />, label: "Students", path: "/Student/list" },
     { icon: <FaUniversity />, label: "Universities", path: "/university/list" },
