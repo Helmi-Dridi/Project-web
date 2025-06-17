@@ -1,6 +1,6 @@
 /**
- * Enhanced admin top bar with animated notification badge, deletion controls
- * and smoother dropdown menus while maintaining existing functionality.
+ * Enhanced admin top bar with animated notification badge, full notification
+ * history and delete controls, while keeping existing functionality intact.
  */
 import { Bell, Trash2, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
@@ -25,16 +25,17 @@ export default function Topbaradmin({ collapsed }: TopbarProps) {
   const profileImage = user?.profilePicture || "/default-avatar.png";
   const username = user?.name || "Unknown User";
 
-  const { data: notificationsRaw, isLoading, isError, refetch } = useNotifications();
+  const { data: notificationsRaw, isLoading, isError, refetch } =
+    useNotifications();
   const deleteMutation = useDeleteNotification();
 
-  const allNotifications = notificationsRaw
+  const rawArray = notificationsRaw
     ? Array.isArray(notificationsRaw)
       ? notificationsRaw
       : [notificationsRaw]
     : [];
 
-  const unseenNotifications = allNotifications
+  const notifications = rawArray
     .map((n: any) => ({
       id: n.ID || n.id,
       type: n.Type || n.type,
@@ -42,7 +43,13 @@ export default function Topbaradmin({ collapsed }: TopbarProps) {
       seen: n.Seen ?? n.seen,
       createdAt: n.CreatedAt || n.createdAt,
     }))
-    .filter((n) => !n.seen && !isNaN(new Date(n.createdAt).getTime()));
+    .filter((n) => !isNaN(new Date(n.createdAt).getTime()))
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+  const unseenCount = notifications.filter((n) => !n.seen).length;
 
   const notifRef = useRef<HTMLDivElement>(null);
 
@@ -90,7 +97,7 @@ export default function Topbaradmin({ collapsed }: TopbarProps) {
             onClick={() => setShowNotifications((prev) => !prev)}
           >
             <Bell className="w-6 h-6" />
-            {unseenNotifications.length > 0 && (
+            {unseenCount > 0 && (
               <span className="absolute -top-1 -right-1 flex">
                 <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-red-500 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600" />
@@ -105,11 +112,11 @@ export default function Topbaradmin({ collapsed }: TopbarProps) {
                 <p className="text-sm text-gray-500">Loading...</p>
               ) : isError ? (
                 <p className="text-sm text-red-500">Error loading notifications.</p>
-              ) : unseenNotifications.length === 0 ? (
-                <p className="text-sm text-gray-500">No new notifications.</p>
+              ) : notifications.length === 0 ? (
+                <p className="text-sm text-gray-500">No notifications.</p>
               ) : (
                 <ul className="space-y-3">
-                  {unseenNotifications.map((notif) => (
+                  {notifications.map((notif) => (
                     <li
                       key={notif.id}
                       className="text-sm bg-gray-50 rounded-lg p-3 flex justify-between items-start gap-3 hover:bg-gray-100 transition"

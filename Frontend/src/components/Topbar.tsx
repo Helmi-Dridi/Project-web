@@ -1,13 +1,15 @@
-
 /**
  * Modernized top navigation bar displaying search, notifications, and user menu.
  * UI uses Tailwind for soft shadows, hover effects and animated badges while
- * preserving all existing logic.
+ * preserving all existing logic. Users can dismiss notifications in-place.
  */
-import { Bell, ChevronDown } from "lucide-react";
+import { Bell, ChevronDown, Trash2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useNotifications } from "../hooks/useNotifications";
+import {
+  useNotifications,
+  useDeleteNotification,
+} from "../hooks/useNotifications";
 import { useNavigate } from "react-router-dom";
 
 type TopbarProps = {
@@ -24,8 +26,33 @@ export default function Topbar({ collapsed }: TopbarProps) {
   const profileImage = user?.profilePicture || "/default-avatar.png";
   const username = user?.name || "Unknown User";
 
-  const { data: rawNotifications, isLoading, isError } = useNotifications();
-  const notifications = Array.isArray(rawNotifications) ? rawNotifications : [];
+  const {
+    data: rawNotifications,
+    isLoading,
+    isError,
+    refetch,
+  } = useNotifications();
+  const deleteMutation = useDeleteNotification();
+
+  const notificationsArray = rawNotifications
+    ? Array.isArray(rawNotifications)
+      ? rawNotifications
+      : [rawNotifications]
+    : [];
+
+  const notifications = notificationsArray
+    .map((n: any) => ({
+      id: n.ID || n.id,
+      type: n.Type || n.type,
+      content: n.Content || n.content,
+      seen: n.Seen ?? n.seen,
+      createdAt: n.CreatedAt || n.createdAt,
+    }))
+    .filter((n) => !isNaN(new Date(n.createdAt).getTime()))
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
 
   const notifRef = useRef<HTMLDivElement>(null);
 
@@ -40,7 +67,21 @@ export default function Topbar({ collapsed }: TopbarProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (showNotifications) {
+      refetch();
+    }
+  }, [showNotifications, refetch]);
+
   const unseenCount = notifications.filter((n) => !n.seen).length;
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteMutation.mutateAsync(id);
+    } catch (err) {
+      console.error("Failed to delete notification", err);
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-30 h-20 bg-white shadow-md border-b flex items-center justify-between px-6 py-3 transition-all">
@@ -85,16 +126,25 @@ export default function Topbar({ collapsed }: TopbarProps) {
                 <p className="text-sm text-gray-500">No new notifications.</p>
               ) : (
                 <ul className="space-y-2">
-                  {notifications.slice(0, 5).map((notif) => (
+                  {notifications.map((notif) => (
                     <li
                       key={notif.id}
-                      className="text-sm bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition"
+                      className="text-sm bg-gray-50 rounded-lg p-3 flex justify-between items-start gap-3 hover:bg-gray-100 transition"
                     >
-                      <p className="font-semibold">{notif.type}</p>
-                      <p className="text-gray-600">{notif.content}</p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {new Date(notif.createdAt).toLocaleString()}
-                      </p>
+                      <div className="flex-1">
+                        <p className="font-semibold">{notif.type}</p>
+                        <p className="text-gray-600">{notif.content}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {new Date(notif.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleDelete(notif.id)}
+                        className="text-slate-400 hover:text-red-600"
+                        title="Delete notification"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </li>
                   ))}
                 </ul>
