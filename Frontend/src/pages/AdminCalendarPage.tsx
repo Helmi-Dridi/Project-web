@@ -25,6 +25,7 @@ import {
   useSendReminder,
   useRescheduleAppointment,
 } from "../hooks/useBooking";
+import type { Appointment } from "../services/booking.service";
 
 // Localization
 const locales = { "en-US": enUS };
@@ -36,21 +37,14 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-type Appointment = {
-  id: string;
-  date: string;
-  timeSlot: string;
-  status: string;
-};
-
-type CalendarEvent = {
+interface CalendarEvent {
   id: string;
   title: string;
   start: Date;
   end: Date;
   resource: Appointment;
-};
-function CalendarToolbar({ label, onNavigate, onView, view }: ToolbarProps) {
+}
+function CalendarToolbar({ label, onNavigate, onView, view }: ToolbarProps<CalendarEvent, Appointment>) {
   const viewNames: View[] = ["month", "week", "day", "agenda"];
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
@@ -165,7 +159,11 @@ export default function AdminCalendarPage() {
       {!isLoading && events.length === 0 && (
         <p className="text-center text-gray-500 mb-2">No events to display.</p>
       )}
-      <BigCalendar
+      {!isLoading && events.length === 0 && (
+        <p className="text-center text-gray-500 mb-2">No events to display.</p>
+      )}
+      <BigCalendar<CalendarEvent, Appointment>
+        
         localizer={localizer}
         events={events}
         startAccessor={(event) => event.start}
